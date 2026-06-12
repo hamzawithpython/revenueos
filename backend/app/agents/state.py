@@ -38,6 +38,27 @@ class CodingSlice(BaseModel):
     rationale: str = ""
 
 
+class ScrubSlice(BaseModel):
+    scrubbed: bool = False
+    clean: bool = False
+    edits: list[str] = Field(default_factory=list)
+
+
+class AdjudicationSlice(BaseModel):
+    submitted: bool = False
+    accepted_by_clearinghouse: bool = False
+    front_end_edits: list[str] = Field(default_factory=list)
+    adjudicated: bool = False
+    outcome: str = ""  # PAID / DENIED / ""
+    billed_amount: float = 0.0
+    allowed_amount: float = 0.0
+    paid_amount: float = 0.0
+    patient_responsibility: float = 0.0
+    carc_code: Optional[str] = None
+    rarc_code: Optional[str] = None
+    denial_reason: Optional[str] = None
+
+
 class ClaimState(BaseModel):
     # Identity / tenancy
     claim_id: str
@@ -60,6 +81,8 @@ class ClaimState(BaseModel):
     # Agent outputs
     eligibility: EligibilitySlice = Field(default_factory=EligibilitySlice)
     coding: CodingSlice = Field(default_factory=CodingSlice)
+    scrub: ScrubSlice = Field(default_factory=ScrubSlice)
+    adjudication: AdjudicationSlice = Field(default_factory=AdjudicationSlice)
 
     # Routing / control
     needs_human_review: bool = False

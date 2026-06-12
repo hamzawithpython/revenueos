@@ -84,12 +84,28 @@ def main(count: int):
 
             elig = final_state.eligibility
             cod = final_state.coding
+            scr = final_state.scrub
+            adj = final_state.adjudication
             code_display = _format_codes(cod.codes)
             console.print(
                 f"  eligibility: active={elig.active} copay={elig.copay} "
                 f"plan='{elig.plan_name}'")
             console.print(f"  coding: {code_display}")
-            console.print(f"  rationale: {cod.rationale}")
+            scrub_msg = "clean" if scr.clean else f"{len(scr.edits)} edit(s): {scr.edits}"
+            console.print(f"  scrub: {scrub_msg}")
+            if adj.outcome == "PAID":
+                console.print(
+                    f"  adjudication: [green]PAID[/green] "
+                    f"billed={adj.billed_amount} allowed={adj.allowed_amount} "
+                    f"paid={adj.paid_amount} pr={adj.patient_responsibility}")
+            elif adj.outcome == "DENIED":
+                console.print(
+                    f"  adjudication: [red]DENIED[/red] "
+                    f"{adj.carc_code} - {adj.denial_reason}")
+            elif not adj.accepted_by_clearinghouse and adj.submitted:
+                console.print(
+                    f"  adjudication: [yellow]CH REJECTED[/yellow] "
+                    f"{adj.front_end_edits}")
             console.print(f"  end status=[green]{final_state.status}[/green] "
                           f"review={final_state.needs_human_review}")
     finally:
@@ -101,3 +117,4 @@ if __name__ == "__main__":
     parser.add_argument("--count", type=int, default=1)
     args = parser.parse_args()
     main(args.count)
+
