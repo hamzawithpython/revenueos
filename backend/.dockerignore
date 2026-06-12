@@ -1,0 +1,12 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+alembic/versions/__pycache__/
+test_*.json
+*.log
+.pytest_cache/
+.git/

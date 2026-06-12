@@ -16,5 +16,50 @@ services:
       timeout: 5s
       retries: 5
 
+  mock-eligibility:
+    build:
+      context: ./backend
+    container_name: revenueos-mock-eligibility
+    command: uvicorn app.mocks.eligibility.main:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8001/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mock-clearinghouse:
+    build:
+      context: ./backend
+    container_name: revenueos-mock-clearinghouse
+    command: uvicorn app.mocks.clearinghouse.main:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8002/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mock-payer:
+    build:
+      context: ./backend
+    container_name: revenueos-mock-payer
+    command: uvicorn app.mocks.payer.main:app --host 0.0.0.0 --port 8003
+    ports:
+      - "8003:8003"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8003/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 volumes:
   pgdata:
