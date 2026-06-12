@@ -106,3 +106,12 @@ All run as containerized FastAPI services on a shared Docker network, reachable 
 - **Tenant scoping at the API boundary.** Every request carries an X-Tenant-Id header (standing in for auth, which arrives in the SaaS upgrade). Cross-tenant access returns 404, not a leak; a missing header returns 400. The isolation enforced in the data layer is re-verified at the HTTP edge.
 - **Processing service shared by API and CLI.** The load-state -> run-graph -> persist logic lives in one service module, so the REST endpoint and the CLI runner drive claims through the exact same path.
 - **Service-name networking inside compose.** The API container reaches Postgres and the mocks by service name via environment overrides, while local development uses localhost. Same code, environment-driven URLs - the pattern that makes the production integration swap a config change.
+
+## Phase 7 - React Dashboard (Technical Decisions)
+
+### Technical Decisions
+- **React + Vite + Tailwind over Streamlit.** A system meant to convince a billing professional needs a real operations dashboard - a kanban pipeline, drill-down claim detail, worklists. Streamlit (used elsewhere for an ML demo) cannot deliver that interaction model; the extra build cost buys the "I want this" reaction.
+- **Tenant + role switcher instead of auth.** The switcher sets the X-Tenant-Id the API already enforces, demonstrating the multi-tenant model and role hierarchy without building auth plumbing that adds no portfolio signal. Real JWT/OAuth2 is the documented SaaS upgrade.
+- **Dev-server proxy to the API.** Vite proxies /api to the FastAPI backend, avoiding CORS friction in development and mirroring the deployed topology.
+- **Monospaced numerics.** Codes, money, and IDs render in a tabular monospace face so data reads as data - a small clinical-operations detail that makes the interface feel built for billers.
+- **The pipeline is the signature screen.** Claims as cards moving left-to-right across lifecycle columns, with a one-click "run pipeline" that drives a draft through the full agent flow and watches it land in PAID / DENIED / recovered - the system working, live.
