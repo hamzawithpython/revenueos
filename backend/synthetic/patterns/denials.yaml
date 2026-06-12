@@ -1,0 +1,41 @@
+# Denial code distribution (CARC = Claim Adjustment Reason Code,
+# RARC = Remittance Advice Remark Code). weight = relative frequency.
+# defect_trigger maps a denial to the claim flaw that causes it, so the
+# payer mock can deny realistically based on actual claim defects.
+denials:
+  - carc: "CO-16"
+    rarc: "M51"
+    reason: "Claim lacks information or has submission/billing error"
+    weight: 0.25
+    appealable: true
+    defect_trigger: "missing_modifier"
+  - carc: "CO-97"
+    rarc: "N19"
+    reason: "Benefit for this service is included in another service already adjudicated"
+    weight: 0.15
+    appealable: true
+    defect_trigger: "bundling"
+  - carc: "CO-45"
+    rarc: ""
+    reason: "Charge exceeds fee schedule / contracted amount"
+    weight: 0.20
+    appealable: false
+    defect_trigger: "none"
+  - carc: "PR-1"
+    rarc: ""
+    reason: "Deductible amount"
+    weight: 0.10
+    appealable: false
+    defect_trigger: "none"
+  - carc: "CO-11"
+    rarc: "M76"
+    reason: "Diagnosis inconsistent with procedure"
+    weight: 0.18
+    appealable: true
+    defect_trigger: "dx_cpt_mismatch"
+  - carc: "CO-27"
+    rarc: ""
+    reason: "Expenses incurred after coverage terminated"
+    weight: 0.12
+    appealable: true
+    defect_trigger: "inactive_eligibility"
