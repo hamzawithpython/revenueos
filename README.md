@@ -57,3 +57,13 @@ _Populated as the build surfaces real issues._
 ## Future SaaS Path
 
 What changes to "go real": HIPAA hosting under BAA, real clearinghouse integration (Availity/Change Healthcare), JWT/OAuth2 auth replacing the demo role-switcher, Postgres Row-Level Security, field-level PHI encryption, Stripe billing, SOC 2 path.
+
+## Mock External Services
+
+RevenueOS talks to three mock services that mirror real EDI transactions, so swapping in a production clearinghouse (Availity, Change Healthcare) is a config change rather than a rewrite:
+
+- **mock-eligibility** (270/271) ? returns coverage status, copay, and deductible. ~12% of members return inactive to exercise the eligibility-failure path.
+- **mock-clearinghouse** (837 -> 999/277CA) ? applies front-end edits, rejecting structurally invalid claims (missing NPI, malformed codes) before they reach the payer.
+- **mock-payer** (835/ERA) ? adjudicates claims: pays clean ones with a contractual adjustment (CO-45) and patient responsibility carved out; denies flawed ones with the CARC/RARC matching the actual defect.
+
+All run as containerized FastAPI services on a shared Docker network, reachable by service name. Denial logic is driven by the same pattern files as the synthetic generator, keeping the system internally consistent.
