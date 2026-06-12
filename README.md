@@ -87,3 +87,14 @@ All run as containerized FastAPI services on a shared Docker network, reachable 
 - **Scrubber and payer read the same pattern files.** This makes the system internally consistent: a defect the scrubber flags is the same defect the payer denies, with matching CARC codes (missing modifier -> CO-16, dx/cpt mismatch -> CO-11). The scrubber is the practice's pre-submission catch; the payer is the external check ? modeling both shows the real value of scrubbing (catching denials before they happen).
 - **Flawed claims still proceed to adjudication.** Rather than blocking flawed claims, the pipeline submits them so the denial path is exercised end to end. In production the scrubber would gate submission; here it flags for review but continues, which is what makes the denial-management phase demonstrable.
 - **Two-hop adjudication mirrors production.** Clearinghouse front-end edits first, then payer adjudication ? the same boundary a real integration crosses, so swapping mocks for Availity/Change Healthcare is a client change, not a logic change.
+
+## Phase 5 ? Denial Management & the Appeal Loop (Technical Decisions)
+
+### Technical Decisions
+- **CARC code drives strategy, not the LLM.** The recovery decision (correct-and-resubmit vs. appeal vs. write-off) is a deterministic mapping from the denial code, because it is a business rule, not a judgment call. The LLM is used only where it adds value: drafting appeal-letter prose grounded in the specific denial reason.
+- **Corrections are real mutations, re-read on resubmission.** A CO-16 correction adds the missing modifier to the claim's codes; a CO-11 correction realigns the diagnosis. The resubmission rebuilds the claim from the corrected state, so the payer genuinely re-adjudicates the fixed claim and flips it to PAID ? the loop recovers revenue rather than just re-sending the same denial.
+- **Conditional routing with a bounded loop.** This is the first use of LangGraph conditional edges: adjudicate branches PAID->END / DENIED->denial; denial branches correct->adjudicate (the loop) / appeal->END. A max-attempts guard (2) prevents infinite cycling if a correction does not resolve the defect.
+- **Denied-then-paid history is preserved.** A recovered claim keeps both its Denial row and its Remittance row ? an accurate audit trail of a claim that was denied, corrected, and paid on resubmission.
+
+### Lesson
+- **The node-name / state-key collision recurred.** Adding a `denial_mgmt` state field and naming the node `denial_mgmt` re-triggered the LangGraph reserved-key error from Phase 3. Confirmed pattern: node names must be distinct from every ClaimState field name. Node renamed to `denial_handle`.
