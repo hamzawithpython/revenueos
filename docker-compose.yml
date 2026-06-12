@@ -61,5 +61,37 @@ services:
       timeout: 5s
       retries: 3
 
+  api:
+    build:
+      context: ./backend
+    container_name: revenueos-api
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://revenueos:revenueos@postgres:5432/revenueos
+      MOCK_ELIGIBILITY_URL: http://mock-eligibility:8001
+      MOCK_CLEARINGHOUSE_URL: http://mock-clearinghouse:8002
+      MOCK_PAYER_URL: http://mock-payer:8003
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      LLM_MODEL: ${LLM_MODEL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-eligibility:
+        condition: service_healthy
+      mock-clearinghouse:
+        condition: service_healthy
+      mock-payer:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8000/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 volumes:
   pgdata:
+
