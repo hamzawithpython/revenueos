@@ -145,6 +145,18 @@ def process(claim_id: str, x_tenant_id: str | None = Header(None)):
     return ProcessResult(**result)
 
 
+@app.get("/scorecard")
+def scorecard():
+    """Serve the latest eval scorecard (synthetic test data), if present."""
+    import json
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[2] / "evals" / "scorecards" / "latest.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="no scorecard generated yet")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 @app.get("/analytics", response_model=AnalyticsOut)
 def analytics(x_tenant_id: str | None = Header(None)):
     tenant_id = _tenant_or_400(x_tenant_id)
@@ -188,3 +200,4 @@ def analytics(x_tenant_id: str | None = Header(None)):
         )
     finally:
         session.close()
+

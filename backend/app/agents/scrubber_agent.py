@@ -25,7 +25,9 @@ def _load_procedures() -> dict[str, dict]:
 PROCEDURES = _load_procedures()
 
 
-def run_scrubber(state: ClaimState) -> ClaimState:
+def scrub_claim(state: ClaimState) -> ClaimState:
+    """Pure scrub logic: rule checks only, NO persistence. Used by both
+    run_scrubber (which persists) and the eval harness (which does not)."""
     edits: list[str] = []
 
     cpt_codes = [c for c in state.coding.codes if c.code_type == "cpt"]
@@ -50,13 +52,18 @@ def run_scrubber(state: ClaimState) -> ClaimState:
             edits.append(
                 f"SCRUB-005 Diagnosis {sorted(dx_set)} inconsistent with procedure {cpt.code}")
 
-    clean = len(edits) == 0
-
     state.scrub.scrubbed = True
-    state.scrub.clean = clean
+    state.scrub.clean = len(edits) == 0
     state.scrub.edits = edits
-    if not clean:
+    if not state.scrub.clean:
         state.needs_human_review = True
+    return state
+
+
+def run_scrubber(state: ClaimState) -> ClaimState:
+    state = scrub_claim(state)
+    clean = state.scrub.clean
+    edits = state.scrub.edits
 
     session = SessionLocal()
     try:
@@ -74,3 +81,4 @@ def run_scrubber(state: ClaimState) -> ClaimState:
 
     state.status = "SCRUBBED"
     return state
+

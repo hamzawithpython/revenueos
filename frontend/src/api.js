@@ -25,3 +25,5 @@ export const listClaims = (tenantId, status) =>
 export const getClaim = (tenantId, id) => apiGet(`/claims/${id}`, tenantId)
 export const processClaim = (tenantId, id) => apiPost(`/claims/${id}/process`, tenantId)
 export const getAnalytics = (tenantId) => apiGet("/analytics", tenantId)
+export const getScorecard = () => apiGet("/scorecard")
+
