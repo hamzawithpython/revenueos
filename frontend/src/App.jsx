@@ -4,6 +4,11 @@ import {
 } from "lucide-react"
 import { TenantProvider, useTenant } from "./TenantContext"
 import Dashboard from "./screens/Dashboard"
+import Pipeline from "./screens/Pipeline"
+import ClaimDetail from "./screens/ClaimDetail"
+import ReviewQueue from "./screens/ReviewQueue"
+import Denials from "./screens/Denials"
+import Analytics from "./screens/Analytics"
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -75,13 +80,16 @@ export default function App() {
       <Shell>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/pipeline" element={<Placeholder name="Claims Pipeline" />} />
-          <Route path="/review" element={<Placeholder name="Review Queue" />} />
-          <Route path="/denials" element={<Placeholder name="Denials & Appeals" />} />
-          <Route path="/analytics" element={<Placeholder name="Analytics" />} />
+          <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/claims/:id" element={<ClaimDetail />} />
+          <Route path="/review" element={<ReviewQueue />} />
+          <Route path="/denials" element={<Denials />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Shell>
     </TenantProvider>
   )
 }
+
+
