@@ -98,3 +98,11 @@ All run as containerized FastAPI services on a shared Docker network, reachable 
 
 ### Lesson
 - **The node-name / state-key collision recurred.** Adding a `denial_mgmt` state field and naming the node `denial_mgmt` re-triggered the LangGraph reserved-key error from Phase 3. Confirmed pattern: node names must be distinct from every ClaimState field name. Node renamed to `denial_handle`.
+
+## Phase 6 - REST API (Technical Decisions)
+
+### Technical Decisions
+- **DTOs separate from ORM models.** API responses use dedicated Pydantic schemas, so the public contract is stable and explicit even if the database schema evolves.
+- **Tenant scoping at the API boundary.** Every request carries an X-Tenant-Id header (standing in for auth, which arrives in the SaaS upgrade). Cross-tenant access returns 404, not a leak; a missing header returns 400. The isolation enforced in the data layer is re-verified at the HTTP edge.
+- **Processing service shared by API and CLI.** The load-state -> run-graph -> persist logic lives in one service module, so the REST endpoint and the CLI runner drive claims through the exact same path.
+- **Service-name networking inside compose.** The API container reaches Postgres and the mocks by service name via environment overrides, while local development uses localhost. Same code, environment-driven URLs - the pattern that makes the production integration swap a config change.
