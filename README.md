@@ -115,3 +115,20 @@ All run as containerized FastAPI services on a shared Docker network, reachable 
 - **Dev-server proxy to the API.** Vite proxies /api to the FastAPI backend, avoiding CORS friction in development and mirroring the deployed topology.
 - **Monospaced numerics.** Codes, money, and IDs render in a tabular monospace face so data reads as data - a small clinical-operations detail that makes the interface feel built for billers.
 - **The pipeline is the signature screen.** Claims as cards moving left-to-right across lifecycle columns, with a one-click "run pipeline" that drives a draft through the full agent flow and watches it land in PAID / DENIED / recovered - the system working, live.
+
+## Phase 8 - Evaluation Suite (Technical Decisions & Results)
+
+### Results (on synthetic test data, n=40)
+| Metric | Score |
+|---|---|
+| Coding accuracy | 90% |
+| Clean-claim rate | 100% |
+| Scrub detection | 100% |
+| Denial-handling accuracy | 100% |
+| Defect resolution (end-to-end) | 100% |
+
+### Technical Decisions & Lessons
+- **Not RAGAS.** RevenueOS is not a retrieval-augmented system; its core task is claim-processing accuracy against gold labels, not retrieval quality. The eval scores decisions (coding, scrubbing, denial strategy) against a labeled synthetic test set - the measurement that fits the task.
+- **Eval-driven improvement, measured.** The first run showed 75% coding accuracy. Debug output revealed every miss was a dx/cpt-mismatch claim where the LLM echoed the bad draft diagnosis instead of correcting it. Tightening the coding prompt to actively replace a diagnosis inconsistent with the procedure raised coding accuracy to 90%. The remaining misses are claims whose notes are too thin to infer the correct diagnosis - a genuine, documented limitation rather than a hidden one.
+- **Per-agent isolation prevents metric artifacts.** Fixing the coder caused scrub detection to appear to drop to 70% - because claims the coder corrected upstream were clean by the time the scrubber saw them, and were wrongly counted as scrub misses. The fix: measure the scrubber in isolation on the as-generated claim, and add an end-to-end "defect resolution" metric that credits a defect resolved by either agent. Lesson: in a sequential agent pipeline, a downstream agent's metric must isolate that agent's input, or an upstream improvement distorts it.
+- **Compute/persist separation.** The coding and scrubbing logic was refactored to separate pure decision functions (used by the eval) from persistence (used by the live pipeline), so evals run fast, reproducibly, and never write to the database.
