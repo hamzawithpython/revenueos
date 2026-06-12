@@ -1,0 +1,24 @@
+# Payer mix and denial behavior. Probabilities are sampling weights.
+# denial_rate is the baseline chance a *clean* claim still gets denied;
+# flawed claims are denied based on their actual defects in the payer mock.
+payers:
+  - name: "Medicare"
+    payer_type: "medicare"
+    weight: 0.30
+    denial_rate: 0.05
+  - name: "Medicaid"
+    payer_type: "medicaid"
+    weight: 0.20
+    denial_rate: 0.08
+  - name: "BlueCross Commercial"
+    payer_type: "commercial"
+    weight: 0.25
+    denial_rate: 0.12
+  - name: "Aetna Commercial"
+    payer_type: "commercial"
+    weight: 0.15
+    denial_rate: 0.11
+  - name: "UnitedHealthcare"
+    payer_type: "commercial"
+    weight: 0.10
+    denial_rate: 0.13

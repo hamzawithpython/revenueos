@@ -1,0 +1,16 @@
+# Core
+pydantic==2.9.2
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10
+
+# Synthetic data
+faker==33.1.0
+pyyaml==6.0.2
+
+# Utilities
+rich==13.9.4
