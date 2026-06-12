@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code and pattern files
+# Copy the application code, pattern files, and eval scorecards
 COPY app ./app
 COPY synthetic ./synthetic
+COPY evals ./evals
 
 # Default command is overridden per-service in docker-compose.
 CMD ["uvicorn", "app.mocks.eligibility.main:app", "--host", "0.0.0.0", "--port", "8001"]
+

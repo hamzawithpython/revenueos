@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react"
 import { useTenant } from "../TenantContext"
-import { getAnalytics } from "../api"
+import { getAnalytics, getScorecard } from "../api"
 
 export default function Analytics() {
   const { tenantId } = useTenant()
   const [data, setData] = useState(null)
+  const [card, setCard] = useState(null)
   const [err, setErr] = useState(null)
 
   useEffect(() => {
     if (!tenantId) return
     setData(null); setErr(null)
     getAnalytics(tenantId).then(setData).catch((e) => setErr(e.message))
+    getScorecard().then(setCard).catch(() => setCard(null))
   }, [tenantId])
 
   if (err) return <div className="text-bad text-sm">Could not load analytics: {err}</div>
@@ -82,6 +84,27 @@ export default function Analytics() {
           )}
         </div>
       </div>
+
+      {card && (
+        <div className="bg-white rounded-lg border border-slate-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm font-medium text-ink">Model Evaluation</div>
+            <div className="text-xs text-slate-400">on synthetic test data ? n={card.test_set_size}</div>
+          </div>
+          <div className="grid grid-cols-5 gap-4">
+            {Object.entries(card.metrics).filter(([, v]) => v !== null).map(([key, v]) => (
+              <div key={key}>
+                <div className="text-2xl font-semibold tabular text-ink">{Math.round(v * 100)}%</div>
+                <div className="text-[11px] text-slate-500 mt-1 capitalize">
+                  {key.replace(/_/g, " ")}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+

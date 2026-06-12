@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-06-12T23:10:04.745910+00:00",
+  "test_set_size": 40,
+  "note": "All metrics computed on synthetic test data.",
+  "metrics": {
+    "coding_accuracy": 0.9,
+    "clean_claim_rate": 1.0,
+    "scrub_detection_rate": 1.0,
+    "denial_handling_accuracy": 1.0,
+    "defect_resolution_rate": 1.0
+  },
+  "counts": {
+    "defect_resolved_total": 20,
+    "defect_resolved_count": 20,
+    "coding_correct": 36,
+    "should_clean_total": 20,
+    "should_clean_passed": 20,
+    "should_flag_total": 20,
+    "should_flag_caught": 20,
+    "denial_total": 15,
+    "denial_correct": 15
+  }
+}

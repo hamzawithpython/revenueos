@@ -38,17 +38,26 @@ You MUST only use codes from these catalogues.
 CPT procedures: {_CPT_LIST}
 ICD-10 diagnoses: {_ICD_LIST}
 
+Each CPT procedure has a set of clinically appropriate diagnoses. A draft
+diagnosis may be WRONG for the procedure performed. Do not blindly keep a
+draft diagnosis: if the draft ICD-10 code is not clinically consistent with
+the procedure described in the note, REPLACE it with a diagnosis that is
+appropriate for that procedure. The diagnosis must justify the procedure.
+
 Return JSON with this exact shape:
 {{
   "cpt": [{{"code": "99213", "modifier": null}}],
   "icd10": ["I10"],
   "rationale": "one sentence explaining the coding decision"
 }}
-Only include codes justified by the note. Keep the existing CPT if it is
-appropriate. Do not invent codes outside the catalogues."""
+Only include codes justified by the note and consistent with the procedure.
+Do not invent codes outside the catalogues."""
 
 
-def run_coding(state: ClaimState) -> ClaimState:
+def code_claim(state: ClaimState) -> ClaimState:
+    """Pure coding logic: LLM call + code finalization, NO persistence.
+    Mutates and returns state. Used by both run_coding (which persists)
+    and the eval harness (which does not)."""
     draft_cpt = [c.code for c in state.coding.codes if c.code_type == "cpt"]
     draft_icd = [c.code for c in state.coding.codes if c.code_type == "icd10"]
 
@@ -66,7 +75,6 @@ def run_coding(state: ClaimState) -> ClaimState:
         state.needs_human_review = True
         return state
 
-    # Build the finalized code list, charges carried from the catalogue.
     charge_by_cpt = {p["cpt"]: p["charge"] for p in PROCEDURES}
     new_codes: list[CodeEntry] = []
     for item in result.get("cpt", []):
@@ -86,6 +94,14 @@ def run_coding(state: ClaimState) -> ClaimState:
     state.coding.codes = new_codes
     state.coding.rationale = result.get("rationale", "")
     state.total_charge = sum(c.charge for c in new_codes if c.code_type == "cpt")
+    return state
+
+
+def run_coding(state: ClaimState) -> ClaimState:
+    state = code_claim(state)
+    if not state.coding.coded:
+        return state  # LLM error already recorded
+    new_codes = state.coding.codes
 
     # Persist: replace this claim's codes with the finalized set.
     session = SessionLocal()
@@ -109,3 +125,5 @@ def run_coding(state: ClaimState) -> ClaimState:
 
     state.status = "CODED"
     return state
+
+

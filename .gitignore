@@ -42,4 +42,4 @@ Thumbs.db
 
 # Logs & scorecards
 *.log
-evals/scorecards/*.json
+
