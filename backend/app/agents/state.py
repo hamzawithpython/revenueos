@@ -59,6 +59,16 @@ class AdjudicationSlice(BaseModel):
     denial_reason: Optional[str] = None
 
 
+class DenialMgmtSlice(BaseModel):
+    handled: bool = False
+    strategy: str = ""  # "correct_resubmit" / "appeal" / "write_off"
+    correction_applied: str = ""
+    appeal_letter: str = ""
+    resubmitted: bool = False
+    resolved_outcome: str = ""  # outcome after resubmission, if any
+    attempts: int = 0
+
+
 class ClaimState(BaseModel):
     # Identity / tenancy
     claim_id: str
@@ -83,9 +93,12 @@ class ClaimState(BaseModel):
     coding: CodingSlice = Field(default_factory=CodingSlice)
     scrub: ScrubSlice = Field(default_factory=ScrubSlice)
     adjudication: AdjudicationSlice = Field(default_factory=AdjudicationSlice)
+    denial_mgmt: DenialMgmtSlice = Field(default_factory=DenialMgmtSlice)
 
     # Routing / control
     needs_human_review: bool = False
     errors: list[str] = Field(default_factory=list)
 
     model_config = {"validate_assignment": True}
+
+
