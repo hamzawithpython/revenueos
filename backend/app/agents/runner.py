@@ -93,6 +93,7 @@ def main(count: int):
             console.print(f"  coding: {code_display}")
             scrub_msg = "clean" if scr.clean else f"{len(scr.edits)} edit(s): {scr.edits}"
             console.print(f"  scrub: {scrub_msg}")
+            dm = final_state.denial_mgmt
             if adj.outcome == "PAID":
                 console.print(
                     f"  adjudication: [green]PAID[/green] "
@@ -106,6 +107,18 @@ def main(count: int):
                 console.print(
                     f"  adjudication: [yellow]CH REJECTED[/yellow] "
                     f"{adj.front_end_edits}")
+            if dm.handled:
+                if dm.strategy == "correct_resubmit":
+                    resolved = dm.resolved_outcome or final_state.adjudication.outcome
+                    console.print(
+                        f"  denial mgmt: [cyan]CORRECT+RESUBMIT[/cyan] "
+                        f"({dm.correction_applied}) -> resubmitted={dm.resubmitted} "
+                        f"final={final_state.adjudication.outcome}")
+                elif dm.strategy == "appeal":
+                    preview = (dm.appeal_letter[:80] + "...") if dm.appeal_letter else "(no letter)"
+                    console.print(f"  denial mgmt: [magenta]APPEAL[/magenta] letter: {preview}")
+                else:
+                    console.print(f"  denial mgmt: [yellow]WRITE-OFF[/yellow] ({adj.carc_code})")
             console.print(f"  end status=[green]{final_state.status}[/green] "
                           f"review={final_state.needs_human_review}")
     finally:
@@ -117,4 +130,5 @@ if __name__ == "__main__":
     parser.add_argument("--count", type=int, default=1)
     args = parser.parse_args()
     main(args.count)
+
 
