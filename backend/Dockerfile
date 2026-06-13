@@ -16,6 +16,9 @@ COPY app ./app
 COPY synthetic ./synthetic
 COPY evals ./evals
 
-# Default command is overridden per-service in docker-compose.
-CMD ["uvicorn", "app.mocks.eligibility.main:app", "--host", "0.0.0.0", "--port", "8001"]
+# Default command. Shell form so ${PORT} is expanded by the shell at runtime
+# (Railway injects PORT). Falls back to 8000 locally where PORT is unset.
+# docker-compose overrides this per-service with its own command.
+CMD uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+
 

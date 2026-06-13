@@ -18,15 +18,30 @@ from app.schemas.api import (
 )
 from app.agents.processing import process_claim
 
-app = FastAPI(title="RevenueOS API", version="0.6.0")
+app = FastAPI(title="RevenueOS API", version="0.9.0")
 
-# CORS so the React dashboard (Phase 7, different origin) can call this.
+# CORS so the React dashboard (different origin) can call this.
+# Origins are read from settings so we can tighten to the Vercel domain at deploy.
+import os
+_allowed = os.environ.get("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tightened at deploy
+    allow_origins=_allowed,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount the mock EDI services as sub-apps so the whole system deploys as a
+# SINGLE service. Locally they can still run as separate containers; in the
+# cloud, collapsing them into one process quarters resource use and removes
+# inter-service networking. The agents reach them via localhost in-process.
+from app.mocks.eligibility.main import app as eligibility_app
+from app.mocks.clearinghouse.main import app as clearinghouse_app
+from app.mocks.payer.main import app as payer_app
+
+app.mount("/mock-eligibility", eligibility_app)
+app.mount("/mock-clearinghouse", clearinghouse_app)
+app.mount("/mock-payer", payer_app)
 
 
 def _tenant_or_400(x_tenant_id: str | None) -> str:
@@ -200,4 +215,5 @@ def analytics(x_tenant_id: str | None = Header(None)):
         )
     finally:
         session.close()
+
 
