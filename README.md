@@ -8,6 +8,29 @@ An agentic Medical Billing / Revenue Cycle Management (RCM) platform. Five speci
 
 Medical billing is a high-volume, error-prone, multi-stage workflow. Claims get denied for missing modifiers, eligibility lapses, and coding mismatches ? each denial costs time and revenue. RevenueOS automates the full revenue cycle with stage-specialised AI agents and a human-in-the-loop review queue.
 
+## Screenshots
+
+### Dashboard ? revenue cycle at a glance
+![Dashboard](docs/screenshots/01-dashboard.png)
+
+### Claims Pipeline ? claims flowing through their lifecycle
+![Claims Pipeline](docs/screenshots/02-pipeline.png)
+
+### Claim Detail ? full lifecycle of a denied-then-recovered claim
+![Claim Detail](docs/screenshots/03-claim-detail.png)
+
+### Review Queue ? claims needing a human decision
+![Review Queue](docs/screenshots/04-review-queue.png)
+
+### Denials & Appeals ? denial reasons and AI-drafted appeal letters
+![Denials and Appeals](docs/screenshots/05-denials-appeals.png)
+
+### Analytics ? KPIs and model evaluation on synthetic test data
+![Analytics](docs/screenshots/06-analytics.png)
+
+### REST API ? auto-generated OpenAPI docs
+![API Docs](docs/screenshots/07-api-docs.png)
+
 ## Architecture
 
 _Architecture diagram added in Phase 1._
@@ -180,3 +203,4 @@ cd backend
 python -m evals.harness         # prints scorecard, writes evals/scorecards/latest.json
 python -m evals.harness --debug # also prints per-claim coding misses
 ```
+
