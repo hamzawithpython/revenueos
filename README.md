@@ -40,9 +40,11 @@ docker compose up -d
 
 _Full setup instructions expand as phases land._
 
-## Live Demo
+## Running the System
 
-_Link added in Phase 9._
+RevenueOS runs as a containerized multi-service stack (Postgres, three mock EDI services, and the FastAPI backend) with a React dashboard. See **Local Setup** below for the full run-through. A claim can be driven end to end ? eligibility, AI coding, scrubbing, adjudication, and automated denial recovery ? from the dashboard or directly via the API.
+
+> **Deployment note:** the system is packaged for single-service cloud deployment (mock services mounted as sub-apps; see `backend/run.py`). A cloud deployment was attempted on Railway; the platform''s start-command handling required iteration that is tracked as future work. The system is fully functional locally and via the REST API.
 
 ## Technical Decisions
 
@@ -132,3 +134,49 @@ All run as containerized FastAPI services on a shared Docker network, reachable 
 - **Eval-driven improvement, measured.** The first run showed 75% coding accuracy. Debug output revealed every miss was a dx/cpt-mismatch claim where the LLM echoed the bad draft diagnosis instead of correcting it. Tightening the coding prompt to actively replace a diagnosis inconsistent with the procedure raised coding accuracy to 90%. The remaining misses are claims whose notes are too thin to infer the correct diagnosis - a genuine, documented limitation rather than a hidden one.
 - **Per-agent isolation prevents metric artifacts.** Fixing the coder caused scrub detection to appear to drop to 70% - because claims the coder corrected upstream were clean by the time the scrubber saw them, and were wrongly counted as scrub misses. The fix: measure the scrubber in isolation on the as-generated claim, and add an end-to-end "defect resolution" metric that credits a defect resolved by either agent. Lesson: in a sequential agent pipeline, a downstream agent's metric must isolate that agent's input, or an upstream improvement distorts it.
 - **Compute/persist separation.** The coding and scrubbing logic was refactored to separate pure decision functions (used by the eval) from persistence (used by the live pipeline), so evals run fast, reproducibly, and never write to the database.
+
+
+## Local Setup
+
+**Prerequisites:** Docker Desktop, Python 3.11+, Node.js 18+, a Groq API key (free at console.groq.com).
+
+### 1. Clone and configure
+```powershell
+git clone https://github.com/hamzawithpython/revenueos.git
+cd revenueos
+Copy-Item .env.example .env
+# Edit .env: set GROQ_API_KEY. Leave DATABASE_URL and MOCK_*_URL at their defaults for local dev.
+```
+
+### 2. Start the stack (Postgres + 3 mock services + API)
+```powershell
+docker compose up -d --build
+```
+
+### 3. Set up the database (first run only)
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+alembic upgrade head          # create tables
+python -m synthetic.seed      # seed 2 tenants x 40 synthetic claims
+```
+
+### 4. Run the dashboard
+```powershell
+cd ..\frontend
+npm install
+npm run dev                   # opens on http://localhost:5173
+```
+
+### 5. Use it
+Open http://localhost:5173. Switch tenants/roles in the top bar. On the **Claims Pipeline**, click "Run pipeline" on a DRAFT claim to push it through the full agent flow and watch it land in PAID / DENIED / recovered. Click any claim for its full lifecycle. The API docs are at http://localhost:8000/docs.
+
+### Run the evaluation suite
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m evals.harness         # prints scorecard, writes evals/scorecards/latest.json
+python -m evals.harness --debug # also prints per-claim coding misses
+```
